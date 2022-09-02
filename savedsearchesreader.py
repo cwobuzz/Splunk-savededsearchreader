@@ -1,28 +1,52 @@
+#Created by CWObuzz https://github.com/cwobuzz
+#Please use the readme file found at https://github.com/cwobuzz/Splunk-savededsearchreader
+print("This script needs the filepath to your default and local savedsearches.conf file.\n Set your filters for what you want to keep: filter_list_for_rule_name")
+
 import re
 import random
 import datetime
 import shutil
 import os
 
-filepath = os.path.abspath("shortsavedsearches.conf")
-#looks through provided technology field for text you list.
-input_providing_technologies = "Amazon Web Services"
-# searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
-input_rule = "GSuite Amazon"
-# Enable Rule
-enable_rule = True
+#path to your default savedsearches.conf file
+default_savedsearchesconf = os.path.abspath("savedsearches.conf")
 #local saved search file
 local_savedsearches = os.path.abspath(".\local\savedsearches.conf")
+# searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
+filter_list_for_rule_name = [" Amazon ", " Gsuite", " GSuite ", " AWS ", " aws ", " EC2 ", " GCP ", " gcp ", " Okta "]
+# Remove any providing technologies only put over all name like Amazon, not Amazon Web Services
+input_providing_technologies = "Amazon"
+# Enable Rule sets the enable rule to 1
+enable_rule = True
 
-
-input_rule = input_rule.split()
+#filter_list_for_rule_name = filter_list_for_rule_name.split()
 # set up reg expresstion for parsing conf file
 rule = re.compile(r'(^\[.+)')
 providing_technologies = re.compile(r'(action\.escu\.providing_technologies).+')
 confidence = re.compile(r'(action\.escu\.confidence).+')
 cron_schedule = re.compile(r'(cron_schedule).+')
 modification_date = re.compile(r'(action\.escu\.modification_date).+')
+search_type = re.compile(r'(action\.escu\.search_type).+')
 splunk_search = re.compile(r'(search =).+')
+correlationsearch_annotations = re.compile(r'(action\.correlationsearch\.annotations).+')
+correlationsearch_enabled = re.compile(r'(action\.correlationsearch\.enabled).+')
+correlationsearch_label = re.compile(r'(action\.correlationsearch\.label).+')
+is_enabled = re.compile(r'(action\.escu\.enabled).+')
+risk = re.compile(r'(action\.risk).+')
+dispatch = re.compile(r'(dispatch\.).+')
+schedule_window = re.compile(r'(schedule_window).+')
+alert_digest_mode = re.compile(r'(alert\.digest_mode).+')
+disabled = re.compile(r'(disabled).+')
+enableSched = re.compile(r'(enableSched).+')
+allow_skew = re.compile(r'(allow_skew).+')
+counttype = re.compile(r'(counttype).+')
+relation = re.compile(r'(relation).+')
+quantity = re.compile(r'(quantity).+')
+realtime_schedule = re.compile(r'(realtime_schedule).+')
+is_visible = re.compile(r'(is_visible).+')
+
+#Dictionary for data
+Dict = {}
 
 def backup_file(local_savedsearches):
     shutil.copyfile(local_savedsearches,local_savedsearches + ".bk")
@@ -34,93 +58,214 @@ def split_on_empty_lines(s):
 
     return re.split(blank_line_regex, s.strip())
 def parse_local_savedsearches(local_savedsearches):
-    local_data = []
+
     with open(local_savedsearches, "r") as local_file_object:
         local_readfile = local_file_object.read()
         local_readfile = split_on_empty_lines(local_readfile)
         local_file_object.close()
-        #backup local saved searches
-        #localsavedsearches = open(".\local\savedsearches.conf.bk", "w")      
+          
        
         for local_ruleset in local_readfile:
             for line in local_ruleset.splitlines():
-                #localsavedsearches.writelines(line + "\n")
                 if rule.match(line):
-                    local_data.append(line + "\n")
+                    Dict[line] = {}
+                    Dict[line][line] = line
+                    dic_rule = line
+                    continue
+                    #Dict[line][line] = line   
+                if is_enabled.match(line):
+                    Dict[dic_rule]['is_enabled'] = {line}
+                    continue
+                if correlationsearch_annotations.match(line):
+                    Dict[dic_rule]['correlationsearch_annotations'] = {line}
+                    continue
+                if correlationsearch_enabled.match(line):
+                    Dict[dic_rule]['correlationsearch_enabled'] = {line}
+                    continue
+                if correlationsearch_label.match(line):
+                    Dict[dic_rule]['correlationsearch_label'] = {line}
+                    continue
                 # for keeping track of modification date of rule
                 if modification_date.match(line):
-                    local_data.append(line + "\n")
+                    Dict[dic_rule]['modification'] = {line}
+                    continue
+                if search_type.match(line):
+                    Dict[dic_rule]['search_type'] = {line}
+                    continue
+                if risk.match(line):
+                    Dict[dic_rule]['risk'] = {line}
+                    continue
+                if cron_schedule.match(line):
+                    Dict[dic_rule]['cron_schedule'] = {line}
+                    continue
+                if dispatch.match(line):
+                    Dict[dic_rule]['dispatch'] = {line}
+                    continue
+                if schedule_window.match(line):
+                    Dict[dic_rule]['schedule_window'] = {line}
+                    continue
+                if alert_digest_mode.match(line):
+                    Dict[dic_rule]['alert_digest_mode'] = {line}
+                    continue
+                if disabled.match(line):
+                    Dict[dic_rule]['disabled'] = {line}
+                    continue
+                if enableSched.match(line):
+                    Dict[dic_rule]['enableSched'] = {line}
+                    continue
+                if allow_skew.match(line):
+                    Dict[dic_rule]['allow_skew'] = {line}
+                    continue
+                if counttype.match(line):
+                    Dict[dic_rule]['counttype'] = {line}
+                    continue
+                if relation.match(line):
+                    Dict[dic_rule]['relation'] = {line}
+                    continue
+                if quantity.match(line):
+                    Dict[dic_rule]['quantity'] = {line}
+                    continue
+                if realtime_schedule.match(line):
+                    Dict[dic_rule]['realtime_schedule'] = {line}
+                    continue
+                if is_visible.match(line):
+                    Dict[dic_rule]['is_visible'] = {line}
+                    continue
+                if splunk_search.match(line):
+                    Dict[dic_rule]['splunk_search'] = {line}
+                    continue
+                else:
+                    word = line.split(" = ")[0]
+                    Dict[dic_rule][word] = {line}
         #localsavedsearches.close()
-    return local_data
-local_data = parse_local_savedsearches(local_savedsearches)        
+    return Dict
+    
+Dict = parse_local_savedsearches(local_savedsearches)        
 
-def parse_file(filepath):
-    data = []  # create an empty list to collect the data
+def parse_file(default_savedsearchesconf):
+
     # open the file and read through it line by line
-    with open(filepath, 'r') as file_object:
+    with open(default_savedsearchesconf, 'r') as file_object:
         readfile = file_object.read()
         readfile = split_on_empty_lines(readfile)
         file_object.close()
 
         for ruleset in readfile:
             # # at each line check for a match with a regex
-            keep_data = False
             keep_data_rule = False
-            tempdata = []
             confidence_data = []
             localrule = False
             update_search = False
 
             for line in ruleset.splitlines():
-            # extract rule name and look for terms in the input_test variable
-                for localline in local_data:
-                    if rule.match(line):
-                        tempdata.append(line + "\n")
-                        for input_test in input_rule:
-                            if input_test not in line:
-                                keep_data_rule = True
-                        # Enables the correlation search if set
-                        if enable_rule == True:                                
-                            tempdata.append("action.correlationsearch.annotations = {}\n")
-                            tempdata.append("action.correlationsearch.enabled = 1\n")
-                            tempdata.append("action.correlationsearch.label = " + (line.split("[")[1]).split("]")[0] + "\n")
-                        if rule.match(localline):
-                            if line == localline:
-                                localrule = True    
-                    # for fidelity matching on rule search
-                    if confidence.match(line):
-                        confidence_data = line.split("action.escu.confidence = ")[1]
-                    # for keeping track of modification date of rule
-                    if modification_date.match(line):
-                        if localrule == True:
-                            if modification_date.match(localline):
-                                if datetime.datetime(line.split(" = ")[1]) > datetime.datetime(localline.split(" = ")[1]):
-                                    update_search = True
-                        tempdata.append(line + "\n")
-                    # If you don't have the provided technology it won't be on this list
-                    if providing_technologies.match(line):
-                        if input_providing_technologies not in line:
-                            keep_data = True
-                    # random con so every hour at some random time it will run that way it's not all 0
-                    if cron_schedule.match(line):
-                        tempdata.append('cron_schedule = ' + str(random.randrange(1,59)) + ' * * * *\n')
-                    # based on confidence of rule add eval statment to search. Take off eval if you aren't doing using it
-                    if splunk_search.match(line):
-                        if update_search == True:
-                            if confidence_data == "high":
-                                tempdata.append(line + " | eval fidelity=high ```This alert has a LOW chance of being a false positive```\n")
-                            if confidence_data == "medium":
-                                tempdata.append(line + " | eval fidelity=medium ```This alert has a chance of being a false positive```\n")
-                            if confidence_data == "low":
-                                tempdata.append(line + " | eval fidelity=low ```This alert has a HIGH chance of being a false positive```\n")
-            if keep_data == True and keep_data_rule == True:
-                data.append(tempdata)
-                data.append("\n")
+            # extract rule name and look for terms in the input_test variable      
+                if rule.match(line):
+                    
+                    if not any(value in line for value in filter_list_for_rule_name):    
+                            keep_data_rule = True
+                            
+                    for key in Dict:
+                        if line == str(key):
+                            dic_rule = line
+                            localrule = True
+                            break
+                                                        
+                    if localrule != True: 
+                        if keep_data_rule == True:
+                            Dict[line] = {}    
+                            Dict[line][line] = line
+                            dic_rule = line       
 
-    return data
-data = parse_file(filepath)
-localsavedsearches = open(".\local\savedsearches.conf", "w")
-for line in data:
-    localsavedsearches.writelines(line)
+                # makes sure the rules are enabled
+                if keep_data_rule == True:
+                    if enable_rule == True:
+                        Dict[dic_rule]['action_escu'] = "action.escu = 1"
+                        Dict[dic_rule]['escu_able'] = "action.escu.enabled = 1"
+                        Dict[dic_rule]['risk'] = "action.risk = 1"
+                        Dict[dic_rule]['correlationsearch_enabled'] = "action.correlationsearch.enabled = 1"
+
+                # for fidelity matching on rule search
+                if confidence.match(line):
+                    if keep_data_rule == True:
+                        confidence_data = line.split("action.escu.confidence = ")[1]
+                    
+                # for keeping track of modification date of rule
+                if modification_date.match(line):
+                    if keep_data_rule == True:
+                        if localrule == True:
+                            try:
+                                if datetime.datetime.strptime(line.split(" = ")[1], '%Y-%m-%d').date() > datetime.datetime.strptime(str(Dict[dic_rule]['modification']).split(" = ")[1].split("\'")[0], '%Y-%m-%d').date():
+                                    Dict[dic_rule]['modifcation'] = line
+                                    update_search = True
+                            except:
+                                pass
+                        elif keep_data_rule == True:
+                            Dict[dic_rule]['modifcation'] = line
+                
+                if correlationsearch_label.match(line):
+                    if re.search('Deprecated', line, re.IGNORECASE):
+                        keep_data_rule = False
+
+                # If you don't have the provided technology it won't be on this list
+                if providing_technologies.match(line):
+                     if not any(value in line for value in input_providing_technologies):
+                        keep_data_rule = False
+                        
+                # random con so every hour at some random time it will run that way it's not all 0
+                if cron_schedule.match(line):
+                    if keep_data_rule == True:
+                        Dict[dic_rule]['cron_schedule'] = 'cron_schedule = ' + str(random.randrange(1,59)) + ' * * * *'
+
+                if enableSched.match(line):
+                    if keep_data_rule == True:
+                        Dict[dic_rule]['enableSched'] = "enableSched = 1"
+ 
+                # based on confidence of rule add eval statment to search. Take off eval if you aren't using it
+                if splunk_search.match(line):
+                    if update_search == True or (keep_data_rule == True and localrule == False):
+                        if confidence_data == "high":
+                            Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=high ```This alert has a LOW chance of being a false positive```"
+                         
+                        if confidence_data == "medium":
+                            Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=medium ```This alert has a chance of being a false positive```"
+                          
+                        if confidence_data == "low":
+                            Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=low ```This alert has a HIGH chance of being a false positive```"
+                try:
+                    if keep_data_rule == False:
+                        Dict.pop(dic_rule)
+                        # Rules that are disable 
+                        Dict[dic_rule] = {}    
+                        Dict[dic_rule][dic_rule] = dic_rule
+                        Dict[dic_rule]['action_escu'] = "action.escu = 0"
+                        Dict[dic_rule]['enable'] = "action.escu.enabled = 0"
+                        Dict[dic_rule]['risk'] = "action.risk = 0"
+                        Dict[dic_rule]['correlationsearch'] = "action.correlationsearch.enabled = 0"
+                        Dict[dic_rule]['enableSched'] = "enableSched = 0"
+                except:
+                    pass
+
+    return Dict
+data = parse_file(default_savedsearchesconf)
+localsavedsearches = open(r".\local\tempsavedsearches.conf", "w")
+def iterate_dict(data):
+    for key, value in data.items():
+        # print(key)
+        for v in value:
+            
+            if re.split(r"^{'",str(value[v]))[0] == "": 
+                if rule.match(v):
+                    localsavedsearches.writelines("\n")
+                    localsavedsearches.writelines((re.split(r"^{'|'}$",str(value[v]))[1]) + "\n")
+                else:    
+                    localsavedsearches.writelines((re.split(r"^{'|'}$",str(value[v]))[1]) + "\n")
+            else:    
+                if rule.match(v):
+                    localsavedsearches.writelines("\n")
+                    localsavedsearches.writelines(str(value[v]) + "\n")
+                else:
+                    localsavedsearches.writelines(str(value[v]) + "\n")
+iterate_dict(data)  
+
 localsavedsearches.close()
-# https://www.vipinajayakumar.com/parsing-text-with-python/
+
