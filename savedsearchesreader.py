@@ -9,14 +9,14 @@ import shutil
 import os
 
 #path to your default savedsearches.conf file
-default_savedsearchesconf = os.path.abspath("./dist/ESCU_Alerts/default/savedsearches.conf")
+default_savedsearchesconf = os.path.abspath("shortsavedsearches.conf")
 #local saved search file
-local_savedsearches = os.path.abspath("./dist/ESCU_Alerts/local/savedsearches.conf")
+local_savedsearches = os.path.abspath(".\local\savedsearches.conf")
 # searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
-filter_list_for_rule_name = [" Amazon ", " Gsuite", " GSuite ", " AWS ", " aws ", " EC2 ", " GCP ", " gcp ", " Okta "]
+filter_list_for_rule_name = ["Amazon", "Gsuite", "GSuite ", "AWS", " aws ", "EC2", "GCP", " gcp ", "Okta"]
 # Remove any providing technologies only put over all name like Amazon, not Amazon Web Services
 input_providing_technologies = "Amazon"
-# Enable Rule sets the enable rule to 1
+# Enable Rule sets the action.escu, action.escu.enabled, action.risk, action.correlationsearch.enabled, enableSched all to 1
 enable_rule = True
 
 #filter_list_for_rule_name = filter_list_for_rule_name.split()
@@ -31,6 +31,7 @@ splunk_search = re.compile(r'(search =).+')
 correlationsearch_annotations = re.compile(r'(action\.correlationsearch\.annotations).+')
 correlationsearch_enabled = re.compile(r'(action\.correlationsearch\.enabled).+')
 correlationsearch_label = re.compile(r'(action\.correlationsearch\.label).+')
+action_escu = re.compile(r'(action\.escu =).+')
 is_enabled = re.compile(r'(action\.escu\.enabled).+')
 risk = re.compile(r'(action\.risk).+')
 dispatch = re.compile(r'(dispatch\.).+')
@@ -75,6 +76,9 @@ def parse_local_savedsearches(local_savedsearches):
                     #Dict[line][line] = line   
                 if is_enabled.match(line):
                     Dict[dic_rule]['is_enabled'] = {line}
+                    continue
+                if action_escu.match(line):
+                    Dict[dic_rule]['action_escu'] = {line}
                     continue
                 if correlationsearch_annotations.match(line):
                     Dict[dic_rule]['correlationsearch_annotations'] = {line}
@@ -156,6 +160,7 @@ def parse_file(default_savedsearchesconf):
             confidence_data = []
             localrule = False
             update_search = False
+            search_type_NOT_detection = False
 
             for line in ruleset.splitlines():
             # extract rule name and look for terms in the input_test variable      
@@ -177,13 +182,26 @@ def parse_file(default_savedsearchesconf):
                             dic_rule = line       
 
                 # makes sure the rules are enabled
-                if keep_data_rule == True:
-                    if enable_rule == True:
-                        Dict[dic_rule]['action_escu'] = "action.escu = 1"
-                        Dict[dic_rule]['escu_able'] = "action.escu.enabled = 1"
-                        Dict[dic_rule]['risk'] = "action.risk = 1"
-                        Dict[dic_rule]['correlationsearch_enabled'] = "action.correlationsearch.enabled = 1"
-
+                if action_escu.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['action_escu'] = "action.escu = 1"                      
+                if is_enabled.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['is_enabled'] = "action.escu.enabled = 1"
+                if risk.match(line):    
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['risk'] = "action.risk = 1"
+                if correlationsearch_enabled.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['correlationsearch_enabled'] = "action.correlationsearch.enabled = 1"
+                if enableSched.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['enableSched'] = "enableSched = 1"
                 # for fidelity matching on rule search
                 if confidence.match(line):
                     if keep_data_rule == True:
@@ -216,9 +234,9 @@ def parse_file(default_savedsearchesconf):
                     if keep_data_rule == True:
                         Dict[dic_rule]['cron_schedule'] = 'cron_schedule = ' + str(random.randrange(1,59)) + ' * * * *'
 
-                if enableSched.match(line):
-                    if keep_data_rule == True:
-                        Dict[dic_rule]['enableSched'] = "enableSched = 1"
+                if search_type.match(line):
+                    if line != "action.escu.search_type = detection":
+                        search_type_NOT_detection = True
  
                 # based on confidence of rule add eval statment to search. Take off eval if you aren't using it
                 if splunk_search.match(line):
@@ -231,20 +249,22 @@ def parse_file(default_savedsearchesconf):
                           
                         if confidence_data == "low":
                             Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=low ```This alert has a HIGH chance of being a false positive```"
+
                 try:
-                    if keep_data_rule == False:
-                        Dict.pop(dic_rule)
-                        # Rules that are disable 
-                        Dict[dic_rule] = {}    
-                        Dict[dic_rule][dic_rule] = dic_rule
-                        Dict[dic_rule]['action_escu'] = "action.escu = 0"
-                        Dict[dic_rule]['enable'] = "action.escu.enabled = 0"
-                        Dict[dic_rule]['risk'] = "action.risk = 0"
-                        Dict[dic_rule]['correlationsearch'] = "action.correlationsearch.enabled = 0"
-                        Dict[dic_rule]['enableSched'] = "enableSched = 0"
+                    if search_type_NOT_detection == False:
+                        if keep_data_rule == False:
+                            Dict.pop(dic_rule)
+                            # Rules that are disable 
+                            Dict[dic_rule] = {}    
+                            Dict[dic_rule][dic_rule] = dic_rule
+                            Dict[dic_rule]['action_escu'] = "action.escu = 0"
+                            Dict[dic_rule]['enable'] = "action.escu.enabled = 0"
+                            Dict[dic_rule]['risk'] = "action.risk = 0"
+                            Dict[dic_rule]['correlationsearch'] = "action.correlationsearch.enabled = 0"
+                            Dict[dic_rule]['enableSched'] = "enableSched = 0"
                 except:
                     pass
-
+                
     return Dict
 data = parse_file(default_savedsearchesconf)
 localsavedsearches = open(r".\local\tempsavedsearches.conf", "w")
