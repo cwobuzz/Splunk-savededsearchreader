@@ -9,9 +9,9 @@ import shutil
 import os
 
 #path to your default savedsearches.conf file
-default_savedsearchesconf = os.path.abspath("shortsavedsearches.conf")
+default_savedsearchesconf = os.path.abspath("./dist/ESCU_Alerts/default/savedsearches.conf")
 #local saved search file
-local_savedsearches = os.path.abspath(".\local\savedsearches.conf")
+local_savedsearches = os.path.abspath("./dist/ESCU_Alerts/local/savedsearches.conf")
 # searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
 filter_list_for_rule_name = ["Amazon", "Gsuite", "GSuite ", "AWS", " aws ", "EC2", "GCP", " gcp ", "Okta"]
 # Remove any providing technologies only put over all name like Amazon, not Amazon Web Services
@@ -267,7 +267,7 @@ def parse_file(default_savedsearchesconf):
                 
     return Dict
 data = parse_file(default_savedsearchesconf)
-localsavedsearches = open(r".\local\tempsavedsearches.conf", "w")
+localsavedsearches = open(local_savedsearches, "w")
 def iterate_dict(data):
     for key, value in data.items():
         # print(key)
