@@ -37,7 +37,7 @@ risk = re.compile(r'(action\.risk).+')
 dispatch = re.compile(r'(dispatch\.).+')
 schedule_window = re.compile(r'(schedule_window).+')
 alert_digest_mode = re.compile(r'(alert\.digest_mode).+')
-disabled = re.compile(r'(disabled).+')
+disabled = re.compile(r'(disabled =).+')
 enableSched = re.compile(r'(enableSched).+')
 allow_skew = re.compile(r'(allow_skew).+')
 counttype = re.compile(r'(counttype).+')
@@ -182,6 +182,10 @@ def parse_file(default_savedsearchesconf):
                             dic_rule = line       
 
                 # makes sure the rules are enabled
+                if disabled.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['disabled'] = "disabled = 0"
                 if action_escu.match(line):
                     if keep_data_rule == True:
                         if enable_rule == True:
@@ -257,6 +261,7 @@ def parse_file(default_savedsearchesconf):
                             # Rules that are disable 
                             Dict[dic_rule] = {}    
                             Dict[dic_rule][dic_rule] = dic_rule
+                            Dict[dic_rule]['disable'] = "disabled = 1"
                             Dict[dic_rule]['action_escu'] = "action.escu = 0"
                             Dict[dic_rule]['enable'] = "action.escu.enabled = 0"
                             Dict[dic_rule]['risk'] = "action.risk = 0"
