@@ -29,6 +29,8 @@ This code list should get you started.
   mv ./Splunk-savededsearchreader/savedsearchesreader.py .
   nano savedsearchesreader.py ##Change the filter_list_for_rule_name AND nput_providing_technologies variables to your needs!
   python savedsearchesreader.py
+  cd dist
+  tar -czvf ESCU_Alerts.tar.gz ESCU_Alerts/
 ```  
 ### If you have already ran the program
 ```
@@ -44,4 +46,7 @@ This code list should get you started.
   python contentctl.py -p . init -t ESCU_Alerts -n ESCU_Alerts -v 1.2 -a "Your Name" -d "App built with security_content from github" -e my@email.com -c "My Company"
   ## copy your local savedsearches into the new version. **May not need to do this still testing**
   python savedsearchesreader.py
+  cd dist
+  tar -czvf ESCU_Alerts.tar.gz ESCU_Alerts/
+
   ```
