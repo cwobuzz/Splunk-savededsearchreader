@@ -7,7 +7,6 @@ import random
 import datetime
 import shutil
 import os
-import fileinput
 
 #path to your default savedsearches.conf file
 default_savedsearchesconf = os.path.abspath("./dist/ESCU_Alerts/default/savedsearches.conf")
@@ -78,16 +77,9 @@ def parse_local_savedsearches(local_savedsearches):
         for local_ruleset in local_readfile:
             for line in local_ruleset.splitlines():
                 if rule.match(line):
-                    
-                    if escu_app.match(line):
-                        Dict[line] = {}
-                        Dict[line][line] = line
-                        dic_rule = line
-                    # Need to change rule name or you get a bunch of errors saying the Name is used in other apps    
-                    else:    
-                        dic_rule = "[ESCU APP -"+ line.split("ESCU -")[1]
-                        Dict[dic_rule] = {}
-                        Dict[dic_rule][dic_rule] = dic_rule
+                    dic_rule = line
+                    Dict[dic_rule] = {}
+                    Dict[dic_rule][dic_rule] = dic_rule
                         
                     continue
                     #Dict[line][line] = line   
@@ -194,7 +186,7 @@ def parse_file(default_savedsearchesconf):
                     
                     if not any(value in line for value in filter_list_for_rule_name):    
                         keep_data_rule = True
-                        dic_rule = "[ESCU APP -"+ line.split("ESCU -")[1]
+                        dic_rule = line
                         for x in Dict:
                             if x == dic_rule:
                                 localrule = True
@@ -232,7 +224,9 @@ def parse_file(default_savedsearchesconf):
                     if keep_data_rule == True:
                         if enable_rule == True:
                             Dict[dic_rule]['enableSched'] = "enableSched = 1"
-
+                
+                if correlationsearch_label.match(line):
+                    Dict[dic_rule]['correlationsearch_label'] = "action.correlationsearch.label = [ESCU APP -"+ line.split("ESCU -")[1] + "]"
                 # changes risk amount
                 if action_risk_param_risk.match(line):
                     if keep_data_rule == True:
@@ -328,12 +322,3 @@ def iterate_dict(data):
 iterate_dict(data)  
 
 localsavedsearches.close()
-# changes the name of the default rules to match ESCU APP
-if enable_default_rule_name_change == True:
-    with fileinput.FileInput(default_savedsearchesconf, inplace=True, backup='.bak') as defaultsavedsearches:
-        for defaultline in defaultsavedsearches:
-            if rule.match(defaultline):
-                print(defaultline.replace(defaultline, "[ESCU APP -"+ defaultline.split("ESCU -")[1]), end='')
-            else:
-                print(defaultline, end='')
-    defaultsavedsearches.close()
