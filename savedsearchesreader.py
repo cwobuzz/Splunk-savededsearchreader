@@ -7,6 +7,7 @@ import random
 import datetime
 import shutil
 import os
+import fileinput
 
 #path to your default savedsearches.conf file
 default_savedsearchesconf = os.path.abspath("./dist/ESCU_Alerts/default/savedsearches.conf")
@@ -22,6 +23,8 @@ enable_rule = True
 risk_division_amount = 4
 # path to a text file called rules_to_exclude that will exclude any rule by name in it. Please have every rule name match this format: "ESCU APP - Recon Using WMI Class - Rule"
 rules_to_exclude_file = os.path.abspath("rules_to_exclude.txt")
+# enables changing rule name in default folder
+enable_default_rule_name_change = True
 
 # set up reg expresstion for parsing conf file
 rule = re.compile(r'(^\[.+)')
@@ -325,3 +328,12 @@ def iterate_dict(data):
 iterate_dict(data)  
 
 localsavedsearches.close()
+# changes the name of the default rules to match ESCU APP
+if enable_default_rule_name_change == True:
+    with fileinput.FileInput(default_savedsearchesconf, inplace=True, backup='.bak') as defaultsavedsearches:
+        for defaultline in defaultsavedsearches:
+            if rule.match(defaultline):
+                print(defaultline.replace(defaultline, "[ESCU APP -"+ defaultline.split("ESCU -")[1]), end='')
+            else:
+                print(defaultline, end='')
+    defaultsavedsearches.close()
