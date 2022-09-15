@@ -9,9 +9,9 @@ import shutil
 import os
 
 #path to your default savedsearches.conf file
-default_savedsearchesconf = os.path.abspath("./dist/ESCU_Alerts/default/savedsearches.conf")
+default_savedsearchesconf = os.path.abspath("savedsearches.conf")
 #local saved search file
-local_savedsearches = os.path.abspath("./dist/ESCU_Alerts/local/savedsearches.conf")
+local_savedsearches = os.path.abspath(".\local\savedsearches.conf")
 # searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
 filter_list_for_rule_name = ["Amazon", "Gsuite", "GSuite ", "AWS", " aws ", "EC2", "GCP", " gcp ", "Okta"]
 # Remove any providing technologies only put one term like Amazon, not "Amazon Web Services"
@@ -20,10 +20,8 @@ input_providing_technologies = "Amazon"
 enable_rule = True
 # How much to change risk by. 1 keeps it default. Divides risk by input.
 risk_division_amount = 4
-# path to a text file called rules_to_exclude that will exclude any rule by name in it. Please have every rule name match this format: "ESCU APP - Recon Using WMI Class - Rule"
+# path to a text file called rules_to_exclude that will exclude any rule by name in it. Please have every rule name match this format: "ESCU - Recon Using WMI Class - Rule"
 rules_to_exclude_file = os.path.abspath("rules_to_exclude.txt")
-# enables changing rule name in default folder
-enable_default_rule_name_change = True
 
 # set up reg expresstion for parsing conf file
 rule = re.compile(r'(^\[.+)')
@@ -237,6 +235,12 @@ def parse_file(default_savedsearchesconf):
                 if confidence.match(line):
                     if keep_data_rule == True:
                         confidence_data = line.split("action.escu.confidence = ")[1]
+
+                # removes action.notable
+                if action_noteable.match(line):
+                    if keep_data_rule == True:
+                        if enable_rule == True:
+                            Dict[dic_rule]['action_notable'] = "action.notable = 0" 
                     
                 # for keeping track of modification date of rule
                 if modification_date.match(line):
@@ -322,3 +326,4 @@ def iterate_dict(data):
 iterate_dict(data)  
 
 localsavedsearches.close()
+
