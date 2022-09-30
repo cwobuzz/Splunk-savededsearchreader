@@ -22,7 +22,7 @@ This code list should get you started.
   pip install -r requirements.txt
   python contentctl.py -p . validate -pr ESCU
   python contentctl.py -p . generate -o dist/escu -pr ESCU
-  python contentctl.py -p . init -t ESCU_Alerts -n ESCU_Alerts -v 1 -a "Your Name" -d "App built with security_content from github" -e my@email.com -c "My Company"
+  python contentctl.py -p . init -t ESCU-Alerts -n ESCU-Alerts -v 1 -a "Your Name" -d "App built with security_content from github" -e my@email.com -c "My Company"
   mkdir dist/ESCU_Alerts/local
   touch dist/ESCU_Alerts/local/savedsearches.conf
   git clone https://github.com/cwobuzz/Splunk-savededsearchreader.git
@@ -43,7 +43,7 @@ This code list should get you started.
   python contentctl.py -p . validate -pr ESCU
   python contentctl.py -p . generate -o dist/escu -pr ESCU
   ## update the -v 1 to 1.2
-  python contentctl.py -p . init -t ESCU_Alerts -n ESCU_Alerts -v 1.2 -a "Your Name" -d "App built with security_content from github" -e my@email.com -c "My Company"
+  python contentctl.py -p . init -t ESCU-Alerts -n ESCU-Alerts -v 1.2 -a "Your Name" -d "App built with security_content from github" -e my@email.com -c "My Company"
   ## copy your local savedsearches into the new version. **May not need to do this still testing**
   python savedsearchesreader.py
   cd dist
