@@ -29,6 +29,8 @@ This code list should get you started.
   touch dist/ESCU-Alerts/local/savedsearches.conf
   git clone https://github.com/cwobuzz/Splunk-savededsearchreader.git
   mv ./Splunk-savededsearchreader/savedsearchesreader.py .
+  touch rules_to_exclude.txt
+  add any rules you want to exclude on line at a time in this format no quotes "ESCU - CHCP Command Execution - Rule"
   nano savedsearchesreader.py ##Change the filter_list_for_rule_name AND nput_providing_technologies variables to your needs!
   python savedsearchesreader.py
   cd dist
