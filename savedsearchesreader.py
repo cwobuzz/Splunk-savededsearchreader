@@ -9,9 +9,9 @@ import shutil
 import os
 
 #path to your default savedsearches.conf file
-default_savedsearchesconf = os.path.abspath("savedsearches.conf")
+default_savedsearchesconf = os.path.abspath("./default/savedsearches.conf")
 #local saved search file
-local_savedsearches = os.path.abspath(".\local\savedsearches.conf")
+local_savedsearches = os.path.abspath("./local/savedsearches.conf")
 # searches through rule name for words you don't want in use in your enviroment like GSuite or Amazon
 filter_list_for_rule_name = ["Amazon", "Gsuite", "GSuite ", "AWS", " aws ", "EC2", "GCP", " gcp ", "Okta"]
 # Remove any providing technologies only put one term like Amazon, not "Amazon Web Services"
@@ -50,7 +50,6 @@ relation = re.compile(r'(relation).+')
 quantity = re.compile(r'(quantity).+')
 realtime_schedule = re.compile(r'(realtime_schedule).+')
 is_visible = re.compile(r'(is_visible).+')
-escu_app = re.compile(r'(\[ESCU APP -).+')
 
 #Dictionary for data
 Dict = {}
@@ -224,7 +223,7 @@ def parse_file(default_savedsearchesconf):
                             Dict[dic_rule]['enableSched'] = "enableSched = 1"
                 
                 if correlationsearch_label.match(line):
-                    Dict[dic_rule]['correlationsearch_label'] = "action.correlationsearch.label = [ESCU APP -"+ line.split("ESCU -")[1] + "]"
+                    Dict[dic_rule]['correlationsearch_label'] = line
                 # changes risk amount
                 if action_risk_param_risk.match(line):
                     if keep_data_rule == True:
@@ -279,7 +278,7 @@ def parse_file(default_savedsearchesconf):
                     if update_search == True or (keep_data_rule == True and localrule == False):
                         if confidence_data == "high":
                             Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=high ```This alert has a LOW chance of being a false positive```"
-                         
+                            
                         if confidence_data == "medium":
                             Dict[dic_rule]['splunk_search'] = line + " | eval fidelity=medium ```This alert has a chance of being a false positive```"
                           
